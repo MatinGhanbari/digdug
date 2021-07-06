@@ -1,5 +1,6 @@
 package ir.ac.kntu.scene;
 
+import ir.ac.kntu.Constants.Constants;
 import ir.ac.kntu.items.*;
 import ir.ac.kntu.util.GameMap;
 import javafx.application.Application;
@@ -10,10 +11,10 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Game extends Application implements Serializable {
     private Player player;
@@ -21,11 +22,14 @@ public class Game extends Application implements Serializable {
     private ArrayList<Stone> stones;
     private ArrayList<Mushroom> mushrooms;
     private ArrayList<Heart> hearts;
+    private ArrayList<Wall> walls;
+    private ArrayList<Balloon> balloons;
     private GameMap gameMap;
     private Scene scene;
     private GridPane pane;
     private boolean isDone;
     private Thread timer;
+    private String playerName;
 
     public Game(GameMap gameMap) {
         this.gameMap = gameMap;
@@ -37,18 +41,27 @@ public class Game extends Application implements Serializable {
 
     @Override
     public void start(Stage stage) {
+        stage.close();
+        stage = new Stage();
         startTimer();
         initScene();
-        intiRandomObjects();
+        stage.initStyle(StageStyle.UTILITY);
         stage.setScene(scene);
-        stage.setTitle("Fariboorz Bobmerman");
+        stage.setResizable(false);
+        stage.setTitle("DigDug - Player : " + playerName);
+        System.out.println("Game started!");
+        System.out.println("Player Name : \"" + playerName + "\"");
         stage.show();
+    }
+
+    public void setPlayerName(String playerName) {
+        this.playerName = playerName;
     }
 
     private void startTimer() {
         timer = new Thread(() -> {
             try {
-                Thread.sleep(1000 * 60 * 3);
+                Thread.sleep(Constants.GAME_TIME);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -62,12 +75,22 @@ public class Game extends Application implements Serializable {
         timer.start();
     }
 
-    private void intiRandomObjects() {
-
-    }
-
     public void initScene() {
         player.setGame(this);
+        gameMap.setLists(dirts, walls, stones, mushrooms, hearts, balloons);
+        for (int i = 0; i < balloons.size(); i++) {
+            int finalI = i;
+            new Thread(() -> {
+                while (true) {
+                    try {
+                        Thread.sleep(300);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    balloons.get(finalI).handleMove();
+                }
+            }).start();
+        }
         scene.setOnKeyPressed(keyEvent -> {
             KeyCode temp = keyEvent.getCode();
             if (player.isAlive() && player.getKeys().contains(temp)) {

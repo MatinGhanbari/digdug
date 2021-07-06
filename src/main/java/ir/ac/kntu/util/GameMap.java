@@ -1,6 +1,7 @@
 package ir.ac.kntu.util;
 
 
+import ir.ac.kntu.Constants.Constants;
 import ir.ac.kntu.items.*;
 import ir.ac.kntu.util.Direction;
 import javafx.application.Platform;
@@ -23,23 +24,23 @@ public class GameMap {
     private int[][] items;
     private GridPane pane;
     private Player player;
-    private ArrayList<Dirt> dirts;
-    private ArrayList<Stone> stones;
-    private ArrayList<Mushroom> mushrooms;
-    private ArrayList<Heart> hearts;
+    private final ArrayList<Dirt> dirts = new ArrayList<>();
+    private final ArrayList<Stone> stones = new ArrayList<>();
+    private final ArrayList<Mushroom> mushrooms = new ArrayList<>();
+    private final ArrayList<Heart> hearts = new ArrayList<>();
+    private final ArrayList<Balloon> simpleBalloons = new ArrayList<>();
+    private final ArrayList<Balloon> dragonBalloons = new ArrayList<>();
+    private final ArrayList<Flower> flowers = new ArrayList<>();
+    private final ArrayList<Wall> walls = new ArrayList<>();
     private Scene scene;
 
     public GameMap() {
-        dirts = new ArrayList<>();
-        stones = new ArrayList<>();
-        mushrooms = new ArrayList<>();
-        hearts = new ArrayList<>();
         pane = new GridPane();
         initMap();
         pane.setVgap(1);
         pane.setHgap(1);
-        scene = new Scene(pane, pane.getColumnCount() * 50 + 85, pane.getRowCount() * 50 + 70, Color.GREEN);
-        startRandomObjects();
+        scene = new Scene(pane, pane.getColumnCount() * 30 + 10, pane.getRowCount() * 30 + 150, Color.DARKBLUE);
+        new Thread(this::startRandomObjects).start();
     }
 
     private void initMap() {
@@ -66,18 +67,42 @@ public class GameMap {
             for (int j = 0; j < items[0].length; j++) {
                 Node temp = null;
                 switch (items[i][j]) {
-                    case 0:
-                        temp = new ImageView(new Image("assets/map/dirt.png"));
+                    case 9:
+                        temp = new ImageView(new Image("assets/map/wall.png"));
+                        walls.add(new Wall(pane, temp, false, false));
+                        break;
+                    case 1:
+                    case 11:
+                        temp = new ImageView(new Image("assets/dirts/dirt1.png"));
                         dirts.add(new Dirt(pane, temp, false));
                         break;
-                    case 7:
-                        temp = new ImageView(new Image("assets/map/heart.png"));
-                        hearts.add(new Heart(pane, temp, true));
+                    case 12:
+                        temp = new ImageView(new Image("assets/dirts/dirt2.png"));
+                        dirts.add(new Dirt(pane, temp, false));
                         break;
-                    case 8:
-                        temp = new ImageView(new Image("assets/map/mushroom.png"));
-                        mushrooms.add(new Mushroom(pane, temp, false));
+                    case 13:
+                        temp = new ImageView(new Image("assets/dirts/dirt3.png"));
+                        dirts.add(new Dirt(pane, temp, false));
                         break;
+                    case 14:
+                        temp = new ImageView(new Image("assets/dirts/dirt4.png"));
+                        dirts.add(new Dirt(pane, temp, false));
+                        break;
+                    case 3:
+                        temp = new ImageView(new Image("assets/balloon/simple/balloon_simple_right_standing.png"));
+                        simpleBalloons.add(new Balloon(pane, temp, true, true, BalloonType.SIMPLE));
+                        break;
+                    case 5:
+                        temp = new ImageView(new Image("assets/gameObjects/stone.png"));
+                        stones.add(new Stone(pane, temp, true));
+                        break;
+                    case 6:
+                        temp = new ImageView(new Image("assets/gameObjects/flower.png"));
+                        flowers.add(new Flower(pane, temp, true));
+                        break;
+                    case 4:
+                        temp = new ImageView(new Image("assets/balloon/dragon/balloon_dragon_right_standing.png"));
+                        dragonBalloons.add(new Balloon(pane, temp, true, true, BalloonType.DRAGON));
                     default:
                         break;
                 }
@@ -92,10 +117,11 @@ public class GameMap {
         for (int i = 0; i < items.length; i++) {
             for (int j = 0; j < items[0].length; j++) {
                 Node temp = null;
-
-                temp = new ImageView(new Image("assets/player/player_down_standing.png"));
-                player = new Player(pane, temp);
-
+                if (items[i][j] == 2) {
+                    temp = new ImageView(new Image("assets/player/player_right_standing.png"));
+                    player = new Player(pane, temp);
+                    player.setLists(dirts, stones, walls, mushrooms, hearts);
+                }
                 if (temp != null) {
                     pane.add(temp, j, i);
                 }
@@ -155,46 +181,75 @@ public class GameMap {
         return false;
     }
 
-    public void startRandomObjects() {
-        Random random = new Random();
-        new Thread(() -> {
-            while (true) {
-                Node temp = null;
-                try {
-                    Thread.sleep(15000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                int objtype = random.nextInt(5) + 1;
-                int row = random.nextInt(pane.getRowCount() - 2) + 1;
-                int col = random.nextInt(pane.getColumnCount() - 2) + 1;
-                while (!isValidCoordinates(row, col)) {
-                    row = random.nextInt(pane.getRowCount() - 2) + 1;
-                    col = random.nextInt(pane.getColumnCount() - 2) + 1;
-                }
-                switch (objtype) {
-                    case 1: // powerU
-                        temp = new ImageView(new Image("assets/map/mushroom.png"));
-                        mushrooms.add(new Mushroom(pane, temp, true));
-                        break;
-                    case 2:
-                        temp = new ImageView(new Image("assets/map/heart.png"));
-                        hearts.add(new Heart(pane, temp, true));
-                    default:
-                        break;
-
-                }
-                if (temp != null) {
-                    Node finalTemp = temp;
-                    int finalRow = row;
-                    int finalCol = col;
-                    Platform.runLater(() -> pane.add(finalTemp, finalCol, finalRow));
-                }
+    public boolean hasHeart(int rowIndex, int columnIndex) {
+        for (Heart p : hearts) {
+            if (p.getRowIndex() == rowIndex && p.getColumnIndex() == columnIndex) {
+                p.destroy();
+                mushrooms.remove(p);
+                return true;
             }
-        }).start();
+        }
+        return false;
+    }
+
+    private void startRandomObjects() {
+        Random random = new Random();
+        while (true) {
+            Node temp = null;
+            try {
+                Thread.sleep(Constants.NEW_ITEM_TIME);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            int objtype = random.nextInt(5) + 1;
+            int row = random.nextInt(pane.getRowCount() - 2) + 1;
+            int col = random.nextInt(pane.getColumnCount() - 2) + 1;
+            while (!isValidCoordinates(row, col)) {
+                row = random.nextInt(pane.getRowCount() - 2) + 1;
+                col = random.nextInt(pane.getColumnCount() - 2) + 1;
+            }
+            switch (objtype) {
+                case 1: // mushroom
+                    temp = new ImageView(new Image("assets/gameObjects/mushroom.png"));
+                    mushrooms.add(new Mushroom(pane, temp, true));
+                    System.out.println("New Item! mushroom , " + row + ", " + col);
+                    break;
+                case 2: // heart
+                    temp = new ImageView(new Image("assets/gameObjects/heart.png"));
+                    hearts.add(new Heart(pane, temp, true));
+                    System.out.println("New Item! heart , " + row + ", " + col);
+                default:
+                    break;
+            }
+            if (temp != null) {
+                Node finalTemp = temp;
+                int finalRow = row;
+                int finalCol = col;
+                Platform.runLater(() -> pane.add(finalTemp, finalCol, finalRow));
+            }
+        }
+    }
+
+    private boolean isItem(int row, int col) {
+        for (Mushroom w : mushrooms) {
+            if (w.getRowIndex() == row && w.getColumnIndex() == col) {
+                return true;
+            }
+        }
+        for (Heart w : hearts) {
+            if (w.getRowIndex() == row && w.getColumnIndex() == col) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isValidCoordinates(int row, int column) {
+        for (Wall w : walls) {
+            if (w.getRowIndex() == row && w.getColumnIndex() == column) {
+                return false;
+            }
+        }
         for (Stone w : stones) {
             if (w.getRowIndex() == row && w.getColumnIndex() == column) {
                 return false;
@@ -221,4 +276,23 @@ public class GameMap {
         return true;
     }
 
+    public boolean hasPlayer(int rowIndex, int columnIndex) {
+        return player.getRowIndex() == rowIndex && player.getColumnIndex() == columnIndex;
+    }
+
+    public void setLists(ArrayList<Dirt> dirts, ArrayList<Wall> walls, ArrayList<Stone> stones,
+                         ArrayList<Mushroom> mushrooms, ArrayList<Heart> hearts, ArrayList<Balloon> balloons) {
+        dirts = this.dirts;
+        walls = this.walls;
+        stones = this.stones;
+        mushrooms = this.mushrooms;
+        hearts = this.hearts;
+        balloons = new ArrayList<>();
+        for (Balloon b : simpleBalloons) {
+            balloons.add(b);
+        }
+        for (Balloon b : dragonBalloons) {
+            balloons.add(b);
+        }
+    }
 }
