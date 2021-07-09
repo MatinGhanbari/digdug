@@ -31,7 +31,7 @@ public class Player implements Serializable {
     private String state;
     private int score;
     private boolean isAlive;
-    private boolean hasPower;
+    private boolean hasPower = true;
     private int health = 3;
 
     public Player(GridPane pane, Node node) {
@@ -69,28 +69,61 @@ public class Player implements Serializable {
     }
 
     public void change(Direction dir) {
-        int i = 1;
-        if (this.hasPower) {
-            i = 2;
-        }
         if (!canMove(dir)) {
             return;
         }
         switch (dir) {
             case UP:
-                rowIndex -= i;
+                rowIndex -= 1;
                 break;
             case DOWN:
-                rowIndex += i;
+                rowIndex += 1;
                 break;
             case LEFT:
-                columnIndex -= i;
+                columnIndex -= 1;
                 break;
             case RIGHT:
-                columnIndex += i;
+                columnIndex += 1;
                 break;
             default:
                 break;
+        }
+        for (Dirt dirt : dirts) {
+            if (dirt.getRowIndex() == rowIndex && dirt.getColumnIndex() == columnIndex) {
+                dirt.destroy();
+                break;
+            }
+        }
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (this.hasPower) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (!canMove(dir)) {
+                return;
+            }
+            switch (dir) {
+                case UP:
+                    rowIndex -= 1;
+                    break;
+                case DOWN:
+                    rowIndex += 1;
+                    break;
+                case LEFT:
+                    columnIndex -= 1;
+                    break;
+                case RIGHT:
+                    columnIndex += 1;
+                    break;
+                default:
+                    break;
+            }
         }
         if (game.getMap().hasPower(rowIndex, columnIndex)) {
             new Thread(() -> {
@@ -230,6 +263,34 @@ public class Player implements Serializable {
                 e.printStackTrace();
             }
         }).start();
+        handleMoveOfStone(columnIndex, rowIndex);
+        for (Dirt dirt : dirts) {
+            if (dirt.getRowIndex() == rowIndex && dirt.getColumnIndex() == columnIndex) {
+                dirt.destroy();
+                break;
+            }
+        }
+        try {
+            Thread.currentThread().sleep(50);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleMoveOfStone(int columnIndex, int rowIndex) {
+        for (Stone stone : stones) {
+            if (stone.getColumnIndex() == columnIndex - 1 && stone.getRowIndex() == rowIndex) {
+                new Thread(() -> {
+//                    while (stone.get) {
+//                        try {
+//                            Thread.sleep(100);
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+                }).start();
+            }
+        }
     }
 
     private void shoot() {

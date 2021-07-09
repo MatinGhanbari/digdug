@@ -77,20 +77,21 @@ public class Game extends Application implements Serializable {
 
     public void initScene() {
         player.setGame(this);
-        gameMap.setLists(dirts, walls, stones, mushrooms, hearts, balloons);
-        for (int i = 0; i < balloons.size(); i++) {
-            int finalI = i;
-            new Thread(() -> {
-                while (true) {
-                    try {
-                        Thread.sleep(300);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    balloons.get(finalI).handleMove();
-                }
-            }).start();
-        }
+        //todo: Handle balloons AI
+//        gameMap.setLists(dirts, walls, stones, mushrooms, hearts, balloons);
+//        for (int i = 0; i < balloons.size(); i++) {
+//            int finalI = i;
+//            new Thread(() -> {
+//                while (true) {
+//                    try {
+//                        Thread.sleep(300);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                    balloons.get(finalI).handleMove();
+//                }
+//            }).start();
+//        }
         scene.setOnKeyPressed(keyEvent -> {
             KeyCode temp = keyEvent.getCode();
             if (player.isAlive() && player.getKeys().contains(temp)) {
