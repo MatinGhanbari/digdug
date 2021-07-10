@@ -1,15 +1,24 @@
 package ir.ac.kntu.scene;
 
 import ir.ac.kntu.Constants.Constants;
+import ir.ac.kntu.JavaFxApplication;
 import ir.ac.kntu.items.*;
 import ir.ac.kntu.util.GameMap;
+import ir.ac.kntu.util.Timer;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.HPos;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -30,6 +39,7 @@ public class Game extends Application implements Serializable {
     private boolean isDone;
     private Thread timer;
     private String playerName;
+    private Stage stage;
 
     public Game(GameMap gameMap) {
         this.gameMap = gameMap;
@@ -43,8 +53,10 @@ public class Game extends Application implements Serializable {
     public void start(Stage stage) {
         stage.close();
         stage = new Stage();
+        this.stage = stage;
         startTimer();
         initScene();
+        initBalloons();
         stage.initStyle(StageStyle.UTILITY);
         stage.setScene(scene);
         stage.setResizable(false);
@@ -55,36 +67,50 @@ public class Game extends Application implements Serializable {
         stage.show();
     }
 
+    public void initBalloons() {
+        setLists();
+        for (Balloon balloon : balloons) {
+            balloon.setPlayer(player);
+            balloon.setGame(this);
+            Thread balloonThread = new Thread(balloon::handleMove);
+            balloonThread.setPriority(Thread.NORM_PRIORITY);
+            balloonThread.start();
+        }
+    }
+
+    public void setLists() {
+        player = gameMap.getPlayer();
+        balloons = gameMap.getBalloons();
+        dirts = gameMap.getDirts();
+        walls = gameMap.getWalls();
+        mushrooms = gameMap.getMushrooms();
+        hearts = gameMap.getHearts();
+        stones = gameMap.getStones();
+    }
+
     public void setPlayerName(String playerName) {
         this.playerName = playerName;
     }
 
     private void startTimer() {
         timer = new Thread(() -> {
-            try {
-                Thread.sleep(Constants.GAME_TIME);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            Timer timer = new Timer(0, 0, 0);
+            while (timer.getValue() != Constants.GAME_TIME) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                timer.next();
+                System.out.println(timer);
             }
-            if (!this.isDone()) {
-                Platform.runLater(() -> {
-                    getPane().addRow(getPane().getRowCount() - 1, new Text("TimeUp"));
-                });
-                handleEndOfGame();
-            }
+            handleEndOfGame();
         });
         timer.start();
     }
 
     public void initScene() {
         player.setGame(this);
-        setLists();
-        for (int i = 0; i < balloons.size(); i++) {
-            balloons.get(i).setPlayer(player);
-            balloons.get(i).setGame(this);
-            int finalI = i;
-//            new Thread(() ->balloons.get(finalI).handleMove()).start();
-        }
         scene.setOnKeyReleased(keyEvent -> {
             KeyCode temp = keyEvent.getCode();
             if (player.isAlive() && player.getKeys().contains(temp)) {
@@ -98,28 +124,49 @@ public class Game extends Application implements Serializable {
         });
     }
 
-    private void setLists() {
-        this.dirts = gameMap.getDirts();
-        this.walls = gameMap.getWalls();
-        this.stones = gameMap.getStones();
-        this.mushrooms = gameMap.getMushrooms();
-        this.hearts = gameMap.getHearts();
-        this.balloons = gameMap.getBalloons();
-    }
-
     public void handleEndOfGame() {
         isDone = true;
         Platform.runLater(() -> {
-            int i = -2;
-            if (pane.getChildren().contains(player.getNode())) {
-                pane.getChildren().remove(player.getNode());
-            }
-            pane.addColumn(i += 2, player.getNode());
-            Text t = new Text("" + player.getScore());
-            pane.addColumn(i + 1, t);
-            GridPane.setHalignment(player.getNode(), HPos.CENTER);
-            GridPane.setHalignment(t, HPos.CENTER);
+            Stage secondStage = new Stage();
+            AnchorPane pane = new AnchorPane();
+            Label end = new Label("Time is Up - Score:" + player.getScore());
+            end.setFont(Font.font(50));
+            end.setTextAlignment(TextAlignment.CENTER);
+            end.setLayoutX(50);
+            end.setLayoutY(50);
+            pane.getChildren().add(end);
+            Scene scene = new Scene(pane, 700, 150, Color.WHITESMOKE);
+            secondStage.setScene(scene);
+            secondStage.setOnCloseRequest(event -> {
+                Menu menu = new Menu();
+                menu.start(stage);
+                JavaFxApplication.handleMenu(stage, menu);
+            });
+            stage.close();
+            secondStage.show();
+        });
+    }
 
+    public void handleDie() {
+        isDone = true;
+        Platform.runLater(() -> {
+            Stage secondStage = new Stage();
+            AnchorPane pane = new AnchorPane();
+            Label end = new Label("You died - Score:" + player.getScore());
+            end.setFont(Font.font(50));
+            end.setTextAlignment(TextAlignment.CENTER);
+            end.setLayoutX(50);
+            end.setLayoutY(50);
+            pane.getChildren().add(end);
+            Scene scene = new Scene(pane, 700, 150, Color.WHITESMOKE);
+            secondStage.setScene(scene);
+            secondStage.setOnCloseRequest(event -> {
+                Menu menu = new Menu();
+                menu.start(stage);
+                JavaFxApplication.handleMenu(stage, menu);
+            });
+            stage.close();
+            secondStage.show();
         });
     }
 

@@ -4,14 +4,10 @@ import ir.ac.kntu.scene.Game;
 import ir.ac.kntu.util.BalloonType;
 import ir.ac.kntu.util.Direction;
 import javafx.application.Platform;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
-import javafx.scene.text.Font;
-import javafx.stage.Stage;
 
 public class Balloon extends Item {
     private BalloonType balloonType;
@@ -122,8 +118,11 @@ public class Balloon extends Item {
             if (node == null) {
                 continue;
             }
-            rowIndex = GridPane.getRowIndex(node);
-            columnIndex = GridPane.getColumnIndex(node);
+            try {
+                rowIndex = GridPane.getRowIndex(node);
+                columnIndex = GridPane.getColumnIndex(node);
+            } catch (NullPointerException ignored) {
+            }
             Platform.runLater(() -> pane.getChildren().remove(node));
             switch ((int) (Math.random() * 4)) {
                 case 0:

@@ -62,6 +62,7 @@ public class Player implements Serializable {
 
     public void die() {
         this.isAlive = false;
+        game.handleDie();
     }
 
     public void setScore(int score) {

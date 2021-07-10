@@ -23,7 +23,7 @@ public class JavaFxApplication extends Application {
         handleMenu(stage, menu);
     }
 
-    public void handleMenu(Stage stage, Menu menu) {
+    public static void handleMenu(Stage stage, Menu menu) {
         Game game = new Game(new GameMap());
         menu.getTextField().setOnKeyPressed(keyEvent -> {
             if (keyEvent.getCode() == KeyCode.ENTER) {
