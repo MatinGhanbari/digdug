@@ -3,7 +3,7 @@ package ir.ac.kntu.items;
 import ir.ac.kntu.Constants.Constants;
 import ir.ac.kntu.scene.Game;
 import ir.ac.kntu.util.Direction;
-import ir.ac.kntu.util.GameSerialization;
+import ir.ac.kntu.DAO.GameSerialization;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
@@ -13,7 +13,6 @@ import javafx.scene.layout.GridPane;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Player implements Serializable {
     private String playerName;
@@ -66,7 +65,7 @@ public class Player implements Serializable {
     public void die() {
         if (!game.isDone()) {
             GameSerialization gameSerialization = new GameSerialization();
-            gameSerialization.saveUser(this);
+            gameSerialization.savePlayer(this);
             this.isAlive = false;
             game.handleDie();
         }
