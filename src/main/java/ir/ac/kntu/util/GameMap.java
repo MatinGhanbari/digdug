@@ -304,4 +304,12 @@ public class GameMap {
         balloons.addAll(dragonBalloons);
         return balloons;
     }
+
+    public void setTimer(Label time) {
+        time.setTextFill(Color.WHITESMOKE);
+        time.setFont(Font.font(20));
+        time.setLayoutX(5);
+        time.setLayoutY(5);
+        topPane.getChildren().add(time);
+    }
 }

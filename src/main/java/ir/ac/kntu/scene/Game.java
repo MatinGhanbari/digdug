@@ -7,17 +7,13 @@ import ir.ac.kntu.util.GameMap;
 import ir.ac.kntu.util.Timer;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.geometry.HPos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -37,9 +33,10 @@ public class Game extends Application implements Serializable {
     private Scene scene;
     private GridPane pane;
     private boolean isDone;
-    private Thread timer;
+    private final Timer timer = new Timer(0, 0, 0);
     private String playerName;
     private Stage stage;
+    private final Label time = new Label();
 
     public Game(GameMap gameMap) {
         this.gameMap = gameMap;
@@ -93,8 +90,8 @@ public class Game extends Application implements Serializable {
     }
 
     private void startTimer() {
-        timer = new Thread(() -> {
-            Timer timer = new Timer(0, 0, 0);
+        gameMap.setTimer(time);
+        new Thread(() -> {
             while (timer.getValue() != Constants.GAME_TIME) {
                 try {
                     Thread.sleep(1000);
@@ -102,11 +99,10 @@ public class Game extends Application implements Serializable {
                     e.printStackTrace();
                 }
                 timer.next();
-                System.out.println(timer);
+                Platform.runLater(()->time.setText(timer.toString()));
             }
             handleEndOfGame();
-        });
-        timer.start();
+        }).start();
     }
 
     public void initScene() {

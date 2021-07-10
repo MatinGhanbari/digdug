@@ -111,19 +111,23 @@ public class Balloon extends Item {
     public void handleMove() {
         while (true) {
             try {
-                Thread.sleep(300);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             if (node == null) {
-                continue;
+                address = rootAddress + name + "right_standing" + ".png";
+                node = new ImageView(new Image(address));
             }
             try {
                 rowIndex = GridPane.getRowIndex(node);
                 columnIndex = GridPane.getColumnIndex(node);
             } catch (NullPointerException ignored) {
             }
-            Platform.runLater(() -> pane.getChildren().remove(node));
+            Node oldNode = node;
+
+
+            // moveAI();
             switch ((int) (Math.random() * 4)) {
                 case 0:
                     change(Direction.UP);
@@ -140,13 +144,15 @@ public class Balloon extends Item {
                 default:
                     break;
             }
-
             // moveAI();
 
-            new Thread(() -> Platform.runLater(() -> {
-                pane.getChildren().remove(node);
-                pane.add(node, columnIndex, rowIndex);
-            })).start();
+            Platform.runLater(() -> {
+                try {
+                    pane.getChildren().remove(oldNode);
+                    pane.add(node, columnIndex, rowIndex);
+                } catch (IllegalArgumentException ignore) {
+                }
+            });
 
             Runnable setState = () -> {
                 switch (state) {
