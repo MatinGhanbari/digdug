@@ -1,6 +1,6 @@
 package ir.ac.kntu.scene;
 
-import ir.ac.kntu.Constants.Constants;
+import ir.ac.kntu.constants.Constants;
 import ir.ac.kntu.JavaFxApplication;
 import ir.ac.kntu.items.*;
 import ir.ac.kntu.util.GameMap;
@@ -27,7 +27,7 @@ public class Game extends Application implements Serializable {
     private Player player;
     private ArrayList<Dirt> dirts;
     private ArrayList<Balloon> balloons;
-    private final GameMap gameMap;
+    private GameMap gameMap;
     private final Scene scene;
     private final GridPane pane;
     private boolean isDone = false;
@@ -35,6 +35,9 @@ public class Game extends Application implements Serializable {
     private String playerName = "Player";
     private Stage stage;
     private final Label time = new Label();
+    private final Label health = new Label();
+    private final Label score = new Label();
+    private Thread timerThread;
 
     public Game(GameMap gameMap) {
         this.gameMap = gameMap;
@@ -46,20 +49,23 @@ public class Game extends Application implements Serializable {
 
     @Override
     public void start(Stage stage) {
-        stage.close();
-        stage = new Stage();
-        this.stage = stage;
-        startTimer();
-        initScene();
-        initBalloons();
-        stage.initStyle(StageStyle.UTILITY);
-        stage.setScene(scene);
-        stage.setResizable(false);
-        stage.setTitle("DigDug - Player : " + playerName);
-        System.out.println("Game started!");
-        System.out.println("Player Name : \"" + playerName + "\"");
-        stage.setOnCloseRequest(event -> System.exit(0));
-        stage.show();
+        final Stage[] finalStage = {stage};
+        Platform.runLater(() -> {
+            finalStage[0].close();
+            finalStage[0] = new Stage();
+            this.stage = finalStage[0];
+            initLabels();
+            initScene();
+            initBalloons();
+            finalStage[0].initStyle(StageStyle.UTILITY);
+            finalStage[0].setScene(scene);
+            finalStage[0].setResizable(false);
+            finalStage[0].setTitle("DigDug - Player : " + playerName);
+            System.out.println("Game started!");
+            System.out.println("Player Name : \"" + playerName + "\"");
+            finalStage[0].setOnCloseRequest(event -> System.exit(0));
+            finalStage[0].show();
+        });
     }
 
     public void initBalloons() {
@@ -67,10 +73,17 @@ public class Game extends Application implements Serializable {
         for (Balloon balloon : balloons) {
             balloon.setPlayer(player);
             balloon.setGame(this);
-            Thread balloonThread = new Thread(balloon::handleMove);
-            balloonThread.setPriority(Thread.NORM_PRIORITY);
-            balloonThread.start();
+            try {
+                Thread balloonThread = new Thread(balloon::handleMove);
+                balloonThread.setPriority(Thread.NORM_PRIORITY);
+                balloonThread.start();
+            } catch (NullPointerException ignore) {
+            }
         }
+    }
+
+    public Stage getStage() {
+        return stage;
     }
 
     public void setLists() {
@@ -84,9 +97,28 @@ public class Game extends Application implements Serializable {
         player.setPlayerName(playerName);
     }
 
+    private void initLabels() {
+        startTimer();
+        gameMap.setHealth(health);
+        gameMap.setScore(score);
+        timerThread = new Thread(() -> {
+            while (timer.getValue() * 1000 != Constants.GAME_TIME) {
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                Platform.runLater(() -> health.setText("Hearts: " + player.getHealth()));
+                Platform.runLater(() -> score.setText("Score: " + player.getScore()));
+            }
+            handleEndOfGame();
+        });
+        timerThread.start();
+    }
+
     private void startTimer() {
         gameMap.setTimer(time);
-        new Thread(() -> {
+        timerThread = new Thread(() -> {
             while (timer.getValue() * 1000 != Constants.GAME_TIME) {
                 try {
                     Thread.sleep(1000);
@@ -97,7 +129,8 @@ public class Game extends Application implements Serializable {
                 Platform.runLater(() -> time.setText(timer.toString()));
             }
             handleEndOfGame();
-        }).start();
+        });
+        timerThread.start();
     }
 
     public void initScene() {
@@ -141,7 +174,8 @@ public class Game extends Application implements Serializable {
     public void handleDie() {
         isDone = true;
         Platform.runLater(() -> {
-            Stage secondStage = new Stage();
+            stage.close();
+            stage = new Stage();
             AnchorPane pane = new AnchorPane();
             Label end = new Label("You died - Score:" + player.getScore());
             end.setFont(Font.font(50));
@@ -150,14 +184,32 @@ public class Game extends Application implements Serializable {
             end.setLayoutY(50);
             pane.getChildren().add(end);
             Scene scene = new Scene(pane, 700, 150, Color.WHITESMOKE);
-            secondStage.setScene(scene);
-            secondStage.setOnCloseRequest(event -> {
-                Menu menu = new Menu();
-                menu.start(stage);
-                JavaFxApplication.handleMenu(stage, menu);
+            stage.setScene(scene);
+            stage.setOnCloseRequest(event -> {
+                System.exit(0);
             });
+            stage.show();
+        });
+    }
+
+    public void handleWin() {
+        isDone = true;
+        Platform.runLater(() -> {
             stage.close();
-            secondStage.show();
+            stage = new Stage();
+            AnchorPane pane = new AnchorPane();
+            Label end = new Label("You are win - Score:" + player.getScore());
+            end.setFont(Font.font(50));
+            end.setTextAlignment(TextAlignment.CENTER);
+            end.setLayoutX(50);
+            end.setLayoutY(50);
+            pane.getChildren().add(end);
+            Scene scene = new Scene(pane, 700, 150, Color.WHITESMOKE);
+            stage.setScene(scene);
+            stage.setOnCloseRequest(event -> {
+                System.exit(0);
+            });
+            stage.show();
         });
     }
 
@@ -224,5 +276,81 @@ public class Game extends Application implements Serializable {
             e.printStackTrace();
         }
         Platform.runLater(() -> pane.getChildren().remove(balloon));
+    }
+
+    public Label getHealth() {
+        return health;
+    }
+
+    public Label getScore() {
+        return score;
+    }
+
+    public void setGameMap(GameMap gameMap) {
+        this.gameMap = gameMap;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public void setDone() {
+        this.isDone = true;
+    }
+
+    public Balloon hasEnemyInRange(String name, int i) {
+        switch (name) {
+            case "right/":
+                return checkEnemyRight(i);
+            case "up/":
+                return checkEnemyUp(i);
+            case "down/":
+                return checkEnemyDown(i);
+            case "left/":
+                return checkEnemyLeft(i);
+            default:
+                break;
+        }
+        return null;
+    }
+
+    private Balloon checkEnemyLeft(int i) {
+        for (Balloon balloon : balloons) {
+            if (balloon.getRowIndex() == player.getRowIndex() &&
+                    balloon.getColumnIndex() == player.getColumnIndex() - i) {
+                return balloon;
+            }
+        }
+        return null;
+    }
+
+    private Balloon checkEnemyDown(int i) {
+        for (Balloon balloon : balloons) {
+            if (balloon.getRowIndex() == player.getRowIndex() + i &&
+                    balloon.getColumnIndex() == player.getColumnIndex()) {
+                return balloon;
+            }
+        }
+        return null;
+    }
+
+    private Balloon checkEnemyUp(int i) {
+        for (Balloon balloon : balloons) {
+            if (balloon.getRowIndex() == player.getRowIndex() - i &&
+                    balloon.getColumnIndex() == player.getColumnIndex()) {
+                return balloon;
+            }
+        }
+        return null;
+    }
+
+    private Balloon checkEnemyRight(int i) {
+        for (Balloon balloon : balloons) {
+            if (balloon.getRowIndex() == player.getRowIndex() &&
+                    balloon.getColumnIndex() == player.getColumnIndex() + i) {
+                return balloon;
+            }
+        }
+        return null;
     }
 }

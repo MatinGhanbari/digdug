@@ -1,9 +1,11 @@
 package ir.ac.kntu.items;
 
-import ir.ac.kntu.Constants.Constants;
+import ir.ac.kntu.constants.Constants;
 import ir.ac.kntu.scene.Game;
 import ir.ac.kntu.util.Direction;
-import ir.ac.kntu.DAO.GameSerialization;
+import ir.ac.kntu.dao.GameSerialization;
+import ir.ac.kntu.util.GameMap;
+import ir.ac.kntu.util.GunType;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
@@ -16,7 +18,7 @@ import java.util.*;
 
 public class Player implements Serializable {
     private String playerName;
-    private final GridPane pane;
+    private GridPane pane;
     private Node node;
     private Game game;
     private int rowIndex;
@@ -27,6 +29,7 @@ public class Player implements Serializable {
     private ArrayList<Wall> walls;
     private ArrayList<Mushroom> mushrooms;
     private ArrayList<Heart> hearts;
+    private ArrayList<Gun> guns;
     private final String rootAddress = "assets/player/";
     private String name = "right/";
     private String address;
@@ -34,11 +37,12 @@ public class Player implements Serializable {
     private int score = 0;
     private boolean isAlive = true;
     private boolean hasPower = false;
-    private int health = 3;
+    private boolean hasSniper = false;
+    private int health = Constants.PLAYER_HEARTS;
     private boolean isDirtHere = false;
     private Dirt hereDirt = null;
-    private Thread destroy = new Thread(() -> {
-    });
+    private Thread destroy = new Thread();
+    private GunType gunType = GunType.SIMPLE;
 
     public Player(GridPane pane, Node node) {
         this.pane = pane;
@@ -63,12 +67,30 @@ public class Player implements Serializable {
     }
 
     public void die() {
-        if (!game.isDone()) {
-            GameSerialization gameSerialization = new GameSerialization();
-            gameSerialization.savePlayer(this);
-            this.isAlive = false;
+        health--;
+        GameSerialization gameSerialization = new GameSerialization();
+        gameSerialization.savePlayer(this);
+        System.out.println(health);
+        if (health <= 0) {
             game.handleDie();
+        } else {
+            this.reload();
         }
+    }
+
+    private void reload() {
+        Platform.runLater(() -> {
+            pane.getChildren().remove(this.getNode());
+            pane.add(node, 8, 8);
+        });
+    }
+
+    public void setHealth(int health) {
+        this.health = health;
+    }
+
+    public int getHealth() {
+        return health;
     }
 
     public void setScore(int score) {
@@ -101,6 +123,17 @@ public class Player implements Serializable {
             }).start();
         } else if (game.getMap().hasHeart(rowIndex, columnIndex)) {
             this.health++;
+            game.getHealth().setText("Hearts: " + health);
+        } else if (game.getMap().hasGun(rowIndex, columnIndex)) {
+            new Thread(() -> {
+                hasSniper = true;
+                try {
+                    Thread.sleep(Constants.REMOVE_SNIPER_EFFECT_TIME);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                hasSniper = false;
+            }).start();
         }
         for (Dirt dirt : dirts) {
             if (dirt.getRowIndex() == rowIndex && dirt.getColumnIndex() == columnIndex) {
@@ -261,7 +294,31 @@ public class Player implements Serializable {
         }
     }
 
+    public void handleAttack(KeyCode temp) {
+        Node node = new ImageView(new Image(rootAddress + name + "bullet.png"));
+        int range = 3;
+        if (hasSniper) {
+            range = 5;
+        }
+        int finalRange = range;
+        new Thread(() -> {
+            for (int i = 1; i <= finalRange; i++) {
+                Balloon enemy = game.hasEnemyInRange(name, i);
+                if (enemy != null) {
+                    new Thread(enemy::destroy).start();
+                    game.getMap().getBalloons().remove(enemy);
+                    score += (int) ((Math.random() * 500) + 500);
+                    break;
+                }
+            }
+        }).start();
+    }
+
     public void handleMove(KeyCode temp) {
+        if (temp.equals(keys.get(4))) {
+            handleAttack(temp);
+            return;
+        }
         rowIndex = pane.getRowIndex(node);
         columnIndex = pane.getColumnIndex(node);
         pane.getChildren().remove(node);
@@ -273,8 +330,6 @@ public class Player implements Serializable {
             change(Direction.DOWN);
         } else if (temp.equals(keys.get(3))) {
             change(Direction.LEFT);
-        } else if (temp.equals(keys.get(4))) {
-            shoot();
         }
         pane.add(node, columnIndex, rowIndex);
 
@@ -399,9 +454,6 @@ public class Player implements Serializable {
         return min;
     }
 
-    public void shoot() {
-    }
-
     public int getMaxScore() {
         return score;
     }
@@ -432,5 +484,11 @@ public class Player implements Serializable {
 
     public String getPlayerName() {
         return playerName;
+    }
+
+    public void win() {
+        GameSerialization gameSerialization = new GameSerialization();
+        gameSerialization.savePlayer(this);
+        game.handleWin();
     }
 }

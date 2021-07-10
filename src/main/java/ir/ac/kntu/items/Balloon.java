@@ -19,6 +19,8 @@ public class Balloon extends Item {
     private int columnIndex;
     private Game game;
     private Player player;
+    private int row;
+    private int col;
 
     public Balloon(GridPane pane, Node node, boolean isPassable, boolean destroyable, BalloonType balloonType) {
         super(pane, node, isPassable, destroyable);
@@ -109,7 +111,7 @@ public class Balloon extends Item {
     }
 
     public void handleMove() {
-        while (true) {
+        while (this.isAlive()) {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
@@ -119,8 +121,23 @@ public class Balloon extends Item {
                 address = rootAddress + name + "right_standing" + ".png";
                 setNode(new ImageView(new Image(address)));
             }
-            rowIndex = GridPane.getRowIndex(getNode());
-            columnIndex = GridPane.getColumnIndex(getNode());
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            try {
+                rowIndex = getPane().getRowIndex(getNode());
+                columnIndex = getPane().getColumnIndex(getNode());
+            } catch (NullPointerException e) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
+                rowIndex = getPane().getRowIndex(getNode());
+                columnIndex = getPane().getColumnIndex(getNode());
+            }
             Node oldNode = getNode();
             moveAI();
             Platform.runLater(() -> {
@@ -255,6 +272,63 @@ public class Balloon extends Item {
                 break;
             default:
                 break;
+        }
+    }
+
+    @Override
+    public void destroy() {
+        setAlive(false);
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        row = this.getRowIndex();
+        col = this.getColumnIndex();
+        Platform.runLater(() -> getPane().getChildren().remove(getNode()));
+        setNode(new ImageView(new Image("assets/balloon/" + balloonType.toString().toLowerCase() + "/die/die_1.png")));
+        Platform.runLater(() -> getPane().add(getNode(), col, row));
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        row = this.getRowIndex();
+        col = this.getColumnIndex();
+        Platform.runLater(() -> getPane().getChildren().remove(getNode()));
+        setNode(new ImageView(new Image("assets/balloon/" + balloonType.toString().toLowerCase() + "/die/die_2.png")));
+        Platform.runLater(() -> getPane().add(getNode(), col, row));
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        row = this.getRowIndex();
+        col = this.getColumnIndex();
+        Platform.runLater(() -> getPane().getChildren().remove(getNode()));
+        setNode(new ImageView(new Image("assets/balloon/" + balloonType.toString().toLowerCase() + "/die/die_3.png")));
+        Platform.runLater(() -> getPane().add(getNode(), col, row));
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        row = this.getRowIndex();
+        col = this.getColumnIndex();
+        Platform.runLater(() -> getPane().getChildren().remove(getNode()));
+        setNode(new ImageView(new Image("assets/balloon/" + balloonType.toString().toLowerCase() + "/die/die_4.png")));
+        Platform.runLater(() -> getPane().add(getNode(), col, row));
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        Platform.runLater(() -> getPane().getChildren().remove(getNode()));
+        game.getMap().getBalloons().remove(this);
+        game.setLists();
+        if (game.getMap().getBalloons().size() <= 0) {
+            player.win();
         }
     }
 }

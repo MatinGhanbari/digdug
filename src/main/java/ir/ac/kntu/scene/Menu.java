@@ -1,9 +1,9 @@
 package ir.ac.kntu.scene;
 
-import ir.ac.kntu.Constants.Constants;
-import ir.ac.kntu.DAO.PlayerInfo;
+import ir.ac.kntu.constants.Constants;
+import ir.ac.kntu.dao.PlayerInfo;
 import ir.ac.kntu.util.GameMap;
-import ir.ac.kntu.DAO.GameSerialization;
+import ir.ac.kntu.dao.GameSerialization;
 import javafx.application.Application;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
@@ -43,8 +43,8 @@ public class Menu extends Application {
         HBox hBox = new HBox();
         ArrayList<PlayerInfo> players = new GameSerialization().getAllPlayers();
         if (players != null) {
+            players.sort((o1, o2) -> o1.compare(o2, o1));
             listView.getItems().addAll(players);
-            System.out.println(players);
         }
         listView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         AtomicReference<PlayerInfo> result = new AtomicReference<>(null);

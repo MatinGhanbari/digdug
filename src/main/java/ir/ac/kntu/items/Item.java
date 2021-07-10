@@ -6,18 +6,21 @@ import javafx.scene.layout.GridPane;
 
 import java.io.Serializable;
 
-public class Item implements Serializable {
+public abstract class Item implements Serializable {
     private GridPane pane;
     private Node node;
-    private boolean isAlive;
+    private boolean isAlive = true;
     private boolean isPassable;
     private boolean destroyable;
 
     public Item(GridPane pane, Node node, boolean isPassable, boolean destroyable) {
         this.pane = pane;
         this.node = node;
-        this.isAlive = true;
         this.isPassable = isPassable;
+        this.destroyable = destroyable;
+    }
+
+    public void setDestroyable(boolean destroyable) {
         this.destroyable = destroyable;
     }
 
@@ -38,7 +41,11 @@ public class Item implements Serializable {
     }
 
     public void setNode(Node node) {
-        this.node = node;
+        if (this.isAlive()) {
+            this.node = node;
+        } else {
+            pane.getChildren().remove(node);
+        }
     }
 
     public boolean isAlive() {

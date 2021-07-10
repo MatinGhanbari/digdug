@@ -1,6 +1,6 @@
-package ir.ac.kntu.DAO;
+package ir.ac.kntu.dao;
 
-import ir.ac.kntu.DAO.PlayerInfo;
+import ir.ac.kntu.dao.PlayerInfo;
 import ir.ac.kntu.items.Player;
 
 import java.util.ArrayList;

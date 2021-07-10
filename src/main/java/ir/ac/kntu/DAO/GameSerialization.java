@@ -1,4 +1,4 @@
-package ir.ac.kntu.DAO;
+package ir.ac.kntu.dao;
 
 import ir.ac.kntu.items.Player;
 
@@ -6,7 +6,7 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class GameSerialization implements Serializable, PlayerDAO {
-    String filename = "src/main/resources/data.txt";
+    String filename = "src/main/resources/database/GameData.ddd";
 
     @Override
     public void savePlayer(Player pl) {
@@ -15,18 +15,18 @@ public class GameSerialization implements Serializable, PlayerDAO {
         if (players == null || players.size() <= 0) {
             players = new ArrayList<>();
         }
-        players.removeIf(p -> p.getPlayerName().equals(player.getPlayerName()));
-        players.add(player);
+        ArrayList<PlayerInfo> finalPlayers = new ArrayList<>();
+        for (PlayerInfo p : players) {
+            finalPlayers.add(findPlayer(p, player));
+        }
         try (FileOutputStream file = new FileOutputStream(filename, false);
              ObjectOutputStream out = new ObjectOutputStream(file)) {
-            for (PlayerInfo p : players) {
+            for (PlayerInfo p : finalPlayers) {
                 out.writeObject(p);
             }
             out.close();
             file.close();
-            System.out.println("Object has been serialized");
         } catch (IOException ex) {
-            System.out.println("IOException is caught");
             ex.printStackTrace();
         }
 
@@ -46,10 +46,16 @@ public class GameSerialization implements Serializable, PlayerDAO {
             }
             in.close();
             file.close();
-            System.out.println("Object has been deserialized ");
         } catch (IOException ex) {
-            System.out.println("IOException is caught");
+            ex.printStackTrace();
         }
         return players;
+    }
+
+    public PlayerInfo findPlayer(PlayerInfo p1, PlayerInfo p2) {
+        if (p1.getPlayerName().equalsIgnoreCase(p2.getPlayerName())) {
+            return new PlayerInfo(p1.getPlayerName(), Math.max(p1.getScore(), p2.getScore()));
+        }
+        return p1;
     }
 }

@@ -1,9 +1,8 @@
 package ir.ac.kntu.util;
 
 
-import ir.ac.kntu.Constants.Constants;
+import ir.ac.kntu.constants.Constants;
 import ir.ac.kntu.items.*;
-import ir.ac.kntu.util.Direction;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -16,8 +15,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,6 +31,7 @@ public class GameMap {
     private final ArrayList<Stone> stones = new ArrayList<>();
     private final ArrayList<Mushroom> mushrooms = new ArrayList<>();
     private final ArrayList<Heart> hearts = new ArrayList<>();
+    private final ArrayList<Gun> guns = new ArrayList<>();
     private final ArrayList<Balloon> simpleBalloons = new ArrayList<>();
     private final ArrayList<Balloon> dragonBalloons = new ArrayList<>();
     private final ArrayList<Flower> flowers = new ArrayList<>();
@@ -200,7 +198,18 @@ public class GameMap {
         for (Heart p : hearts) {
             if (p.getRowIndex() == rowIndex && p.getColumnIndex() == columnIndex) {
                 p.destroy();
-                mushrooms.remove(p);
+                hearts.remove(p);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasGun(int rowIndex, int columnIndex) {
+        for (Gun p : guns) {
+            if (p.getRowIndex() == rowIndex && p.getColumnIndex() == columnIndex) {
+                p.destroy();
+                guns.remove(p);
                 return true;
             }
         }
@@ -216,23 +225,24 @@ public class GameMap {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            int objtype = random.nextInt(5) + 1;
+            int objType = random.nextInt(3) + 1;
             int row = random.nextInt(pane.getRowCount() - 2) + 1;
             int col = random.nextInt(pane.getColumnCount() - 2) + 1;
             while (!isValidCoordinates(row, col)) {
                 row = random.nextInt(pane.getRowCount() - 2) + 1;
                 col = random.nextInt(pane.getColumnCount() - 2) + 1;
             }
-            switch (objtype) {
+            switch (objType) {
                 case 1: // mushroom
                     temp = new ImageView(new Image("assets/gameObjects/mushroom.png"));
                     mushrooms.add(new Mushroom(pane, temp, true));
-                    System.out.println("New Item! mushroom , " + row + ", " + col);
                     break;
                 case 2: // heart
                     temp = new ImageView(new Image("assets/gameObjects/heart.png"));
                     hearts.add(new Heart(pane, temp, true));
-                    System.out.println("New Item! heart , " + row + ", " + col);
+                case 3: // gun
+                    temp = new ImageView(new Image("assets/gameObjects/gun.png"));
+                    guns.add(new Gun(pane, temp, true));
                 default:
                     break;
             }
@@ -312,5 +322,23 @@ public class GameMap {
         time.setLayoutX(5);
         time.setLayoutY(5);
         topPane.getChildren().add(time);
+    }
+
+    public void setHealth(Label health) {
+        health.setText("Hearts: " + player.getHealth());
+        health.setTextFill(Color.WHITESMOKE);
+        health.setFont(Font.font(20));
+        health.setLayoutX(250);
+        health.setLayoutY(5);
+        topPane.getChildren().add(health);
+    }
+
+    public void setScore(Label score) {
+        score.setText("Score: " + player.getScore());
+        score.setTextFill(Color.WHITESMOKE);
+        score.setFont(Font.font(20));
+        score.setLayoutX(400);
+        score.setLayoutY(5);
+        topPane.getChildren().add(score);
     }
 }

@@ -1,9 +1,10 @@
-package ir.ac.kntu.DAO;
+package ir.ac.kntu.dao;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Objects;
 
-public class PlayerInfo implements Serializable {
+public class PlayerInfo implements Serializable, Comparator<PlayerInfo> {
     private String playerName;
     private int score;
 
@@ -26,6 +27,11 @@ public class PlayerInfo implements Serializable {
 
     public void setScore(int score) {
         this.score = score;
+    }
+
+    @Override
+    public int compare(PlayerInfo o1, PlayerInfo o2) {
+        return o1.getScore() - o2.getScore();
     }
 
     @Override
