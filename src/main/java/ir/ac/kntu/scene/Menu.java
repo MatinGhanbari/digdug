@@ -27,7 +27,7 @@ public class Menu extends Application {
     @Override
     public void start(Stage stage) {
         pane = new BorderPane();
-        scene = new Scene(pane, Colodr.GREEN);
+        scene = new Scene(pane, Color.GREEN);
         stage.setScene(scene);
         stage.setTitle(Constants.GAME_TITLE);
         btn = new Button("Play");
