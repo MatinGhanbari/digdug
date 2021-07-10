@@ -1,5 +1,8 @@
 9 wall
-1 dirt
+11 dirt1
+12 dirt2
+13 dirt3
+14 dirt4
 2 player
 0 space
 3 simple balloon

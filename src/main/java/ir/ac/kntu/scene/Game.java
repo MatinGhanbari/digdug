@@ -51,6 +51,7 @@ public class Game extends Application implements Serializable {
         stage.setTitle("DigDug - Player : " + playerName);
         System.out.println("Game started!");
         System.out.println("Player Name : \"" + playerName + "\"");
+        stage.setOnCloseRequest(event -> System.exit(0));
         stage.show();
     }
 
@@ -77,22 +78,14 @@ public class Game extends Application implements Serializable {
 
     public void initScene() {
         player.setGame(this);
-        //todo: Handle balloons AI
-//        gameMap.setLists(dirts, walls, stones, mushrooms, hearts, balloons);
-//        for (int i = 0; i < balloons.size(); i++) {
-//            int finalI = i;
-//            new Thread(() -> {
-//                while (true) {
-//                    try {
-//                        Thread.sleep(300);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                    balloons.get(finalI).handleMove();
-//                }
-//            }).start();
-//        }
-        scene.setOnKeyPressed(keyEvent -> {
+        setLists();
+        for (int i = 0; i < balloons.size(); i++) {
+            balloons.get(i).setPlayer(player);
+            balloons.get(i).setGame(this);
+            int finalI = i;
+//            new Thread(() ->balloons.get(finalI).handleMove()).start();
+        }
+        scene.setOnKeyReleased(keyEvent -> {
             KeyCode temp = keyEvent.getCode();
             if (player.isAlive() && player.getKeys().contains(temp)) {
                 player.handleMove(temp);
@@ -103,6 +96,15 @@ public class Game extends Application implements Serializable {
                 System.exit(0);
             }
         });
+    }
+
+    private void setLists() {
+        this.dirts = gameMap.getDirts();
+        this.walls = gameMap.getWalls();
+        this.stones = gameMap.getStones();
+        this.mushrooms = gameMap.getMushrooms();
+        this.hearts = gameMap.getHearts();
+        this.balloons = gameMap.getBalloons();
     }
 
     public void handleEndOfGame() {

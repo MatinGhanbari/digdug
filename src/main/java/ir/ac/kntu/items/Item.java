@@ -7,8 +7,8 @@ import javafx.scene.layout.GridPane;
 import java.io.Serializable;
 
 public class Item implements Serializable {
-    private GridPane pane;
-    private Node node;
+    protected GridPane pane;
+    protected Node node;
     private boolean isAlive;
     private boolean isPassable;
     private boolean destroyable;

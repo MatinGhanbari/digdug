@@ -7,10 +7,15 @@ import ir.ac.kntu.util.Direction;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -22,7 +27,8 @@ import java.util.Scanner;
 
 public class GameMap {
     private int[][] items;
-    private GridPane pane;
+    private GridPane pane = new GridPane();
+    private AnchorPane topPane = new AnchorPane();
     private Player player;
     private final ArrayList<Dirt> dirts = new ArrayList<>();
     private final ArrayList<Stone> stones = new ArrayList<>();
@@ -33,13 +39,21 @@ public class GameMap {
     private final ArrayList<Flower> flowers = new ArrayList<>();
     private final ArrayList<Wall> walls = new ArrayList<>();
     private Scene scene;
+    private final BorderPane mainPane = new BorderPane();
 
     public GameMap() {
-        pane = new GridPane();
         initMap();
-        pane.setVgap(1);
-        pane.setHgap(1);
-        scene = new Scene(pane, pane.getColumnCount() * 30 + 10, pane.getRowCount() * 30 + 150, Color.DARKBLUE);
+        pane.setVgap(0.5);
+        pane.setHgap(0.5);
+        ImageView nightSky = new ImageView(new Image("assets/nightSky.png", pane.getColumnCount() * 30 + 18,
+                pane.getRowCount() * 30 + 150, true, false));
+        Label label = new Label();
+        label.setTextAlignment(TextAlignment.CENTER);
+        label.setFont(Font.font(100));
+        topPane.getChildren().addAll(nightSky, label);
+        mainPane.setTop(topPane);
+        mainPane.setBottom(pane);
+        scene = new Scene(mainPane, pane.getColumnCount() * 30 + 18, pane.getRowCount() * 30 + 217, Color.BLACK);
         new Thread(this::startRandomObjects).start();
     }
 
@@ -280,19 +294,14 @@ public class GameMap {
         return player.getRowIndex() == rowIndex && player.getColumnIndex() == columnIndex;
     }
 
-    public void setLists(ArrayList<Dirt> dirts, ArrayList<Wall> walls, ArrayList<Stone> stones,
-                         ArrayList<Mushroom> mushrooms, ArrayList<Heart> hearts, ArrayList<Balloon> balloons) {
-        dirts = this.dirts;
-        walls = this.walls;
-        stones = this.stones;
-        mushrooms = this.mushrooms;
-        hearts = this.hearts;
-        balloons = new ArrayList<>();
-        for (Balloon b : simpleBalloons) {
-            balloons.add(b);
-        }
-        for (Balloon b : dragonBalloons) {
-            balloons.add(b);
-        }
+    public ArrayList<Wall> getWalls() {
+        return walls;
+    }
+
+    public ArrayList<Balloon> getBalloons() {
+        ArrayList<Balloon> balloons = new ArrayList<>();
+        balloons.addAll(simpleBalloons);
+        balloons.addAll(dragonBalloons);
+        return balloons;
     }
 }

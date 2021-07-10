@@ -44,6 +44,7 @@ public class Menu extends Application {
         GridPane.setHalignment(hBox, HPos.CENTER);
         pane.setCenter(gridPane);
         stage.setResizable(false);
+        stage.setOnCloseRequest(event -> System.exit(0));
         stage.show();
     }
 

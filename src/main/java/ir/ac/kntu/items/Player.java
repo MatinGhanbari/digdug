@@ -31,7 +31,7 @@ public class Player implements Serializable {
     private String state;
     private int score;
     private boolean isAlive;
-    private boolean hasPower = true;
+    private boolean hasPower = false;
     private int health = 3;
 
     public Player(GridPane pane, Node node) {
@@ -143,7 +143,7 @@ public class Player implements Serializable {
         node = new ImageView(new Image(address));
     }
 
-    private boolean canMove(Direction dir) {
+    public boolean canMove(Direction dir) {
         switch (dir) {
             case UP:
                 if (rowIndex == 0 || thereIsImpassableItem(columnIndex, rowIndex - 1, dir)) {
@@ -172,7 +172,11 @@ public class Player implements Serializable {
         return true;
     }
 
-    private boolean thereIsImpassableItem(int columnIndex, int rowIndex, Direction dir) {
+    public ArrayList<Dirt> getDirts() {
+        return dirts;
+    }
+
+    public boolean thereIsImpassableItem(int columnIndex, int rowIndex, Direction dir) {
         for (Wall w : walls) {
             if (w.getRowIndex() == rowIndex && w.getColumnIndex() == columnIndex) {
                 return true;
@@ -196,7 +200,7 @@ public class Player implements Serializable {
         this.hearts = hearts;
     }
 
-    private void setState(Direction dir) {
+    public void setState(Direction dir) {
         switch (dir) {
             case UP:
                 state = "up_moving";
@@ -267,17 +271,18 @@ public class Player implements Serializable {
         for (Dirt dirt : dirts) {
             if (dirt.getRowIndex() == rowIndex && dirt.getColumnIndex() == columnIndex) {
                 dirt.destroy();
+                dirts.remove(dirt);
                 break;
             }
         }
         try {
-            Thread.currentThread().sleep(50);
+            Thread.sleep(50);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    private void handleMoveOfStone(int columnIndex, int rowIndex) {
+    public void handleMoveOfStone(int columnIndex, int rowIndex) {
         for (Stone stone : stones) {
             if (stone.getColumnIndex() == columnIndex - 1 && stone.getRowIndex() == rowIndex) {
                 new Thread(() -> {
@@ -293,10 +298,10 @@ public class Player implements Serializable {
         }
     }
 
-    private void shoot() {
+    public void shoot() {
     }
 
-    private int getMaxScore() {
+    public int getMaxScore() {
         return score;
     }
 

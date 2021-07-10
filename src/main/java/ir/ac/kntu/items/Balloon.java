@@ -1,30 +1,26 @@
 package ir.ac.kntu.items;
 
-import ir.ac.kntu.Constants.Constants;
 import ir.ac.kntu.scene.Game;
 import ir.ac.kntu.util.BalloonType;
 import ir.ac.kntu.util.Direction;
 import javafx.application.Platform;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
-
-import java.util.ArrayList;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
 
 public class Balloon extends Item {
     private BalloonType balloonType;
     private String rootAddress = "assets/";
     private String name = "balloon/";
     private String address;
-    private String state;
-    private GridPane pane;
-    private Node node;
+    private String state = "right_standing";
     private int rowIndex;
     private int columnIndex;
-    private ArrayList<Stone> stones;
-    private ArrayList<Wall> walls;
-    private ArrayList<Dirt> dirts;
     private Game game;
     private Player player;
 
@@ -42,88 +38,153 @@ public class Balloon extends Item {
         }
     }
 
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
     public void setPlayer(Player player) {
         this.player = player;
     }
 
-    public void setLists(ArrayList<Dirt> dirts, ArrayList<Stone> stones, ArrayList<Wall> walls) {
-        this.dirts = dirts;
-        this.stones = stones;
-        this.walls = walls;
+    public BalloonType getBalloonType() {
+        return balloonType;
+    }
+
+    public void setBalloonType(BalloonType balloonType) {
+        this.balloonType = balloonType;
+    }
+
+    public String getRootAddress() {
+        return rootAddress;
+    }
+
+    public void setRootAddress(String rootAddress) {
+        this.rootAddress = rootAddress;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    @Override
+    public int getRowIndex() {
+        return rowIndex;
+    }
+
+    public void setRowIndex(int rowIndex) {
+        this.rowIndex = rowIndex;
+    }
+
+    @Override
+    public int getColumnIndex() {
+        return columnIndex;
+    }
+
+    public void setColumnIndex(int columnIndex) {
+        this.columnIndex = columnIndex;
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public Player getPlayer() {
+        return player;
     }
 
     public void handleMove() {
-        rowIndex = pane.getRowIndex(node);
-        columnIndex = pane.getColumnIndex(node);
-        pane.getChildren().remove(node);
-        switch ((int) (Math.random() * 4)) {
-            case 0:
-                change(Direction.UP);
-                break;
-            case 1:
-                change(Direction.RIGHT);
-                break;
-            case 2:
-                change(Direction.DOWN);
-                break;
-            case 3:
-                change(Direction.LEFT);
-                break;
-            default:
-                break;
-        }
-        pane.add(node, columnIndex, rowIndex);
-
-        Runnable setState = () -> {
-            switch (state) {
-                case "right_moving":
-                    state = "right_standing";
+        while (true) {
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (node == null) {
+                continue;
+            }
+            rowIndex = GridPane.getRowIndex(node);
+            columnIndex = GridPane.getColumnIndex(node);
+            Platform.runLater(() -> pane.getChildren().remove(node));
+            switch ((int) (Math.random() * 4)) {
+                case 0:
+                    change(Direction.UP);
                     break;
-                case "up_moving":
-                    state = "up_standing";
+                case 1:
+                    change(Direction.RIGHT);
                     break;
-                case "down_moving":
-                    state = "down_standing";
+                case 2:
+                    change(Direction.DOWN);
                     break;
-                case "left_moving":
-                    state = "left_standing";
+                case 3:
+                    change(Direction.LEFT);
                     break;
                 default:
                     break;
             }
-            address = rootAddress + name + state + ".png";
-            pane.getChildren().remove(node);
-            node = new ImageView(new Image(address));
-            pane.add(node, columnIndex, rowIndex);
-        };
 
-        new Thread(() -> {
-            try {
-                Thread.sleep(200);
-                Platform.runLater(setState);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }).start();
+            // moveAI();
+
+            new Thread(() -> Platform.runLater(() -> {
+                pane.getChildren().remove(node);
+                pane.add(node, columnIndex, rowIndex);
+            })).start();
+
+            Runnable setState = () -> {
+                switch (state) {
+                    case "up_moving":
+                    case "right_moving":
+                        state = "right_standing";
+                        break;
+                    case "left_moving":
+                    case "down_moving":
+                        state = "left_standing";
+                    default:
+                        break;
+                }
+                address = rootAddress + name + state + ".png";
+                pane.getChildren().remove(node);
+                node = new ImageView(new Image(address));
+                pane.add(node, columnIndex, rowIndex);
+            };
+
+            new Thread(() -> {
+                try {
+                    Thread.sleep(200);
+                    Platform.runLater(setState);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        }
     }
 
     private boolean thereIsImpassableItem(int columnIndex, int rowIndex, Direction dir) {
-        for (Wall w : walls) {
+        for (Dirt w : player.getDirts()) {
             if (w.getRowIndex() == rowIndex && w.getColumnIndex() == columnIndex) {
                 return true;
             }
         }
-        for (Stone w : stones) {
-            if (w.getRowIndex() == rowIndex && w.getColumnIndex() == columnIndex) {
-                return true;
-            }
-        }
-        for (Dirt w : dirts) {
-            if (w.getRowIndex() == rowIndex && w.getColumnIndex() == columnIndex) {
-                return true;
-            }
-        }
-        return false;
+        return player.thereIsImpassableItem(columnIndex, rowIndex, dir);
     }
 
     private boolean canMove(Direction dir) {
@@ -156,22 +217,21 @@ public class Balloon extends Item {
     }
 
     private void change(Direction dir) {
-        int i = 1;
         if (!canMove(dir)) {
             return;
         }
         switch (dir) {
             case UP:
-                rowIndex -= i;
+                rowIndex -= 1;
                 break;
             case DOWN:
-                rowIndex += i;
+                rowIndex += 1;
                 break;
             case LEFT:
-                columnIndex -= i;
+                columnIndex -= 1;
                 break;
             case RIGHT:
-                columnIndex += i;
+                columnIndex += 1;
                 break;
             default:
                 break;
@@ -187,16 +247,12 @@ public class Balloon extends Item {
     private void setState(Direction dir) {
         switch (dir) {
             case UP:
-                state = "up_moving";
-                break;
-            case DOWN:
-                state = "down_moving";
-                break;
-            case LEFT:
-                state = "left_moving";
-                break;
             case RIGHT:
                 state = "right_moving";
+                break;
+            case DOWN:
+            case LEFT:
+                state = "left_moving";
                 break;
             default:
                 break;

@@ -20,18 +20,22 @@ public class JavaFxApplication extends Application {
     public void start(Stage stage) throws Exception {
         Menu menu = new Menu();
         menu.start(stage);
+        handleMenu(stage, menu);
+    }
+
+    public void handleMenu(Stage stage, Menu menu) {
+        Game game = new Game(new GameMap());
         menu.getTextField().setOnKeyPressed(keyEvent -> {
-            if(keyEvent.getCode()== KeyCode.ENTER){
-                Game game = new Game(new GameMap());
+            if (keyEvent.getCode() == KeyCode.ENTER) {
                 game.setPlayerName(menu.getTextField().getText());
                 game.start(stage);
                 return;
             }
         });
         menu.getPlayButton().setOnMouseClicked(e -> {
-            Game game = new Game(new GameMap());
             game.setPlayerName(menu.getTextField().getText());
             game.start(stage);
         });
     }
+
 }
