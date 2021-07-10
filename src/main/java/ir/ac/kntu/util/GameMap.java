@@ -240,6 +240,7 @@ public class GameMap {
                 case 2: // heart
                     temp = new ImageView(new Image("assets/gameObjects/heart.png"));
                     hearts.add(new Heart(pane, temp, true));
+                    break;
                 case 3: // gun
                     temp = new ImageView(new Image("assets/gameObjects/gun.png"));
                     guns.add(new Gun(pane, temp, true));
