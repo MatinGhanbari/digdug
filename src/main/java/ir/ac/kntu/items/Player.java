@@ -25,14 +25,16 @@ public class Player implements Serializable {
     private ArrayList<Wall> walls;
     private ArrayList<Mushroom> mushrooms;
     private ArrayList<Heart> hearts;
-    private String rootAddress = "assets/";
-    private String name = "player/player_";
+    private String rootAddress = "assets/player/";
+    private String name = "right/";
     private String address;
     private String state;
     private int score;
     private boolean isAlive;
     private boolean hasPower = false;
     private int health = 3;
+    private boolean isDirtHere = false;
+    private Dirt hereDirt;
 
     public Player(GridPane pane, Node node) {
         this.pane = pane;
@@ -76,15 +78,19 @@ public class Player implements Serializable {
         switch (dir) {
             case UP:
                 rowIndex -= 1;
+                name = "up/";
                 break;
             case DOWN:
                 rowIndex += 1;
+                name = "down/";
                 break;
             case LEFT:
                 columnIndex -= 1;
+                name = "left/";
                 break;
             case RIGHT:
                 columnIndex += 1;
+                name = "right/";
                 break;
             default:
                 break;
@@ -112,15 +118,19 @@ public class Player implements Serializable {
             switch (dir) {
                 case UP:
                     rowIndex -= 1;
+                    name = "up/";
                     break;
                 case DOWN:
                     rowIndex += 1;
+                    name = "down/";
                     break;
                 case LEFT:
                     columnIndex -= 1;
+                    name = "left/";
                     break;
                 case RIGHT:
                     columnIndex += 1;
+                    name = "right/";
                     break;
                 default:
                     break;
@@ -139,8 +149,16 @@ public class Player implements Serializable {
         } else if (game.getMap().hasHeart(rowIndex, columnIndex)) {
             this.health++;
         }
+        for (Dirt dirt : dirts) {
+            if (dirt.getRowIndex() == rowIndex && dirt.getColumnIndex() == columnIndex) {
+                isDirtHere = true;
+                hereDirt = dirt;
+                break;
+            }
+        }
         setState(dir);
         address = rootAddress + name + state + ".png";
+        System.out.println(address);
         node = new ImageView(new Image(address));
     }
 
@@ -202,18 +220,28 @@ public class Player implements Serializable {
     }
 
     public void setState(Direction dir) {
+        String dig = "";
+        if (isDirtHere) {
+            hereDirt.destroy();
+            dirts.remove(hereDirt);
+            dig += "_dig";
+        }
         switch (dir) {
             case UP:
-                state = "up_moving";
+                state = "moving" + dig;
+                name = "up/";
                 break;
             case DOWN:
-                state = "down_moving";
+                state = "moving" + dig;
+                name = "down/";
                 break;
             case LEFT:
-                state = "left_moving";
+                state = "moving" + dig;
+                name = "left/";
                 break;
             case RIGHT:
-                state = "right_moving";
+                state = "moving" + dig;
+                name = "right/";
                 break;
             default:
                 break;
@@ -238,22 +266,31 @@ public class Player implements Serializable {
         pane.add(node, columnIndex, rowIndex);
 
         Runnable setState = () -> {
-            switch (state) {
-                case "right_moving":
-                    state = "right_standing";
-                    break;
-                case "up_moving":
-                    state = "up_standing";
-                    break;
-                case "down_moving":
-                    state = "down_standing";
-                    break;
-                case "left_moving":
-                    state = "left_standing";
-                    break;
-                default:
-                    break;
+            String dig = "";
+            if (isDirtHere) {
+                dig += "_dig";
             }
+            if (state.equalsIgnoreCase("moving_dig") || state.equals("moving")) {
+                state = "standing" + dig;
+            }
+
+            address = rootAddress + name + state + ".png";
+            pane.getChildren().remove(node);
+            node = new ImageView(new Image(address));
+            pane.add(node, columnIndex, rowIndex);
+
+            if (isDirtHere) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (state.equalsIgnoreCase("standing_dig")) {
+                    state = "standing";
+                }
+                isDirtHere = false;
+            }
+
             address = rootAddress + name + state + ".png";
             pane.getChildren().remove(node);
             node = new ImageView(new Image(address));
@@ -269,13 +306,7 @@ public class Player implements Serializable {
             }
         }).start();
         handleMoveOfStone(columnIndex, rowIndex);
-        for (Dirt dirt : dirts) {
-            if (dirt.getRowIndex() == rowIndex && dirt.getColumnIndex() == columnIndex) {
-                dirt.destroy();
-                dirts.remove(dirt);
-                break;
-            }
-        }
+
         try {
             Thread.sleep(50);
         } catch (InterruptedException e) {

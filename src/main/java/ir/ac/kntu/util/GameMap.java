@@ -132,7 +132,7 @@ public class GameMap {
             for (int j = 0; j < items[0].length; j++) {
                 Node temp = null;
                 if (items[i][j] == 2) {
-                    temp = new ImageView(new Image("assets/player/player_right_standing.png"));
+                    temp = new ImageView(new Image("assets/player/right/standing.png"));
                     player = new Player(pane, temp);
                     player.setLists(dirts, stones, walls, mushrooms, hearts);
                 }
