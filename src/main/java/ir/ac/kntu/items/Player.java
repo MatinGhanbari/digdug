@@ -3,6 +3,7 @@ package ir.ac.kntu.items;
 import ir.ac.kntu.Constants.Constants;
 import ir.ac.kntu.scene.Game;
 import ir.ac.kntu.util.Direction;
+import ir.ac.kntu.util.GameSerialization;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
@@ -15,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Player implements Serializable {
+    private String playerName;
     private final GridPane pane;
     private Node node;
     private Game game;
@@ -63,6 +65,8 @@ public class Player implements Serializable {
 
     public void die() {
         if (!game.isDone()) {
+            GameSerialization gameSerialization = new GameSerialization();
+            gameSerialization.saveUser(this);
             this.isAlive = false;
             game.handleDie();
         }
@@ -275,7 +279,7 @@ public class Player implements Serializable {
         }
         pane.add(node, columnIndex, rowIndex);
 
-        Runnable setState = GenerateSetStateRunnable();
+        Runnable setState = generateSetStateRunnable();
 
         new Thread(() -> {
             try {
@@ -292,9 +296,19 @@ public class Player implements Serializable {
                 e.printStackTrace();
             }
         }).start();
+        new Thread(this::checkDied).start();
     }
 
-    private Runnable GenerateSetStateRunnable() {
+    private void checkDied() {
+        for (Balloon balloon : (ArrayList<Balloon>) game.getMap().getBalloons().clone()) {
+            if (this.getColumnIndex() == balloon.getColumnIndex()
+                    && this.getRowIndex() == balloon.getRowIndex()) {
+                die();
+            }
+        }
+    }
+
+    private Runnable generateSetStateRunnable() {
         Runnable setState = () -> {
             try {
                 Thread.sleep(120);
@@ -351,8 +365,9 @@ public class Player implements Serializable {
                                 pane.getChildren().remove(stone.getNode());
                                 pane.add(stone.getNode(), columnIndex, stone.getRowIndex() + 1);
                             });
+                            new Thread(() -> game.checkSmash(stone.getColumnIndex(), stone.getRowIndex())).start();
                             Thread.sleep(50);
-                            if (stone.getRowIndex() >= getMinRowOfDirts(stoneRow, columnIndex) - 2) {
+                            if (stone.getRowIndex() >= getMinRowOfDirts(stoneRow, columnIndex) - 1) {
                                 if (finalFallCount >= 2) {
                                     stones.remove(stone);
                                     destroy = new Thread(stone::destroy);
@@ -366,6 +381,10 @@ public class Player implements Serializable {
                 }
             }
         }
+    }
+
+    public void setNode(Node node) {
+        this.node = node;
     }
 
     private int getMinRowOfDirts(int index, int columnIndex) {
@@ -406,5 +425,9 @@ public class Player implements Serializable {
 
     public Node getNode() {
         return node;
+    }
+
+    public void setPlayerName(String playerName) {
+        this.playerName = playerName;
     }
 }

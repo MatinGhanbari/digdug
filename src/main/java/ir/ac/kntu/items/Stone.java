@@ -25,7 +25,7 @@ public class Stone extends Item {
         col = this.getColumnIndex();
         Platform.runLater(() -> getPane().getChildren().remove(getNode()));
         setNode(new ImageView(new Image("assets/gameObjects/stone_2.png")));
-        Platform.runLater(() -> getPane().add(getNode(), row, col));
+        Platform.runLater(() -> getPane().add(getNode(), col, row));
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
@@ -35,7 +35,7 @@ public class Stone extends Item {
         col = this.getColumnIndex();
         Platform.runLater(() -> getPane().getChildren().remove(getNode()));
         setNode(new ImageView(new Image("assets/gameObjects/stone_3.png")));
-        Platform.runLater(() -> getPane().add(getNode(), row, col));
+        Platform.runLater(() -> getPane().add(getNode(), col, row));
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {

@@ -9,6 +9,8 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
@@ -79,6 +81,7 @@ public class Game extends Application implements Serializable {
 
     public void setPlayerName(String playerName) {
         this.playerName = playerName;
+        player.setPlayerName(playerName);
     }
 
     private void startTimer() {
@@ -168,5 +171,58 @@ public class Game extends Application implements Serializable {
 
     public GameMap getMap() {
         return gameMap;
+    }
+
+    public void checkSmash(int columnIndex, int rowIndex) {
+        for (Balloon balloon : (ArrayList<Balloon>) balloons.clone()) {
+            if (balloon.getColumnIndex() == columnIndex && balloon.getRowIndex() == rowIndex) {
+                player.setScore(player.getScore() + (int) (Math.random() * 500));
+                smashBalloon(balloon);
+            }
+        }
+        if (player.getRowIndex() == rowIndex && player.getColumnIndex() == columnIndex) {
+            smashPlayer(player);
+        }
+    }
+
+    public void smashPlayer(Player player) {
+        int col = player.getColumnIndex();
+        int row = player.getRowIndex();
+        try {
+            Thread.sleep(250);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        Platform.runLater(() -> pane.getChildren().remove(player));
+        player.setNode(new ImageView(new Image("assets/player/smashed.png")));
+        Platform.runLater(() -> pane.add(player.getNode(), col, row));
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        player.die();
+    }
+
+    public void smashBalloon(Balloon balloon) {
+        balloon.setAlive(false);
+        balloons.remove(balloon);
+        int col = balloon.getColumnIndex();
+        int row = balloon.getRowIndex();
+        try {
+            Thread.sleep(250);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        Platform.runLater(() -> pane.getChildren().remove(balloon));
+        balloon.setNode(new ImageView(new Image("assets/balloon/" +
+                balloon.getBalloonType().toString().toLowerCase() + "/smashed.png")));
+        Platform.runLater(() -> pane.add(balloon.getNode(), col, row));
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        Platform.runLater(() -> pane.getChildren().remove(balloon));
     }
 }
