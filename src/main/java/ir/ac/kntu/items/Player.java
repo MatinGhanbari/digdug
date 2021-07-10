@@ -12,37 +12,36 @@ import javafx.scene.layout.GridPane;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Player implements Serializable {
-    private GridPane pane;
+    private final GridPane pane;
     private Node node;
     private Game game;
     private int rowIndex;
     private int columnIndex;
-    private List<KeyCode> keys = new ArrayList<>();
+    private final List<KeyCode> keys = new ArrayList<>();
     private ArrayList<Dirt> dirts;
     private ArrayList<Stone> stones;
     private ArrayList<Wall> walls;
     private ArrayList<Mushroom> mushrooms;
     private ArrayList<Heart> hearts;
-    private String rootAddress = "assets/player/";
+    private final String rootAddress = "assets/player/";
     private String name = "right/";
     private String address;
-    private String state;
-    private int score;
-    private boolean isAlive;
+    private String state = "standing";
+    private int score = 0;
+    private boolean isAlive = true;
     private boolean hasPower = false;
     private int health = 3;
     private boolean isDirtHere = false;
-    private Dirt hereDirt;
+    private Dirt hereDirt = null;
+    private Thread destroy = new Thread(() -> {
+    });
 
     public Player(GridPane pane, Node node) {
         this.pane = pane;
         this.node = node;
-        score = 0;
-        isAlive = true;
-        state = "right_standing";
-        address = rootAddress + name + state + ".png";
         initKeys();
     }
 
@@ -63,8 +62,10 @@ public class Player implements Serializable {
     }
 
     public void die() {
-        this.isAlive = false;
-        game.handleDie();
+        if (!game.isDone()) {
+            this.isAlive = false;
+            game.handleDie();
+        }
     }
 
     public void setScore(int score) {
@@ -72,6 +73,45 @@ public class Player implements Serializable {
     }
 
     public void change(Direction dir) {
+        setNameOrdinary(dir);
+        for (Dirt dirt : dirts) {
+            if (dirt.getRowIndex() == rowIndex && dirt.getColumnIndex() == columnIndex) {
+                dirt.destroy();
+                break;
+            }
+        }
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        setNameHasPower(dir);
+        if (game.getMap().hasPower(rowIndex, columnIndex)) {
+            new Thread(() -> {
+                hasPower = true;
+                try {
+                    Thread.sleep(Constants.REMOVE_MUSHROOM_EFFECT_TIME);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                hasPower = false;
+            }).start();
+        } else if (game.getMap().hasHeart(rowIndex, columnIndex)) {
+            this.health++;
+        }
+        for (Dirt dirt : dirts) {
+            if (dirt.getRowIndex() == rowIndex && dirt.getColumnIndex() == columnIndex) {
+                isDirtHere = true;
+                hereDirt = dirt;
+                break;
+            }
+        }
+        setState(dir);
+        address = rootAddress + name + state + ".png";
+        node = new ImageView(new Image(address));
+    }
+
+    private void setNameOrdinary(Direction dir) {
         if (!canMove(dir)) {
             return;
         }
@@ -95,17 +135,9 @@ public class Player implements Serializable {
             default:
                 break;
         }
-        for (Dirt dirt : dirts) {
-            if (dirt.getRowIndex() == rowIndex && dirt.getColumnIndex() == columnIndex) {
-                dirt.destroy();
-                break;
-            }
-        }
-        try {
-            Thread.sleep(50);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    }
+
+    private void setNameHasPower(Direction dir) {
         if (this.hasPower) {
             try {
                 Thread.sleep(100);
@@ -136,30 +168,6 @@ public class Player implements Serializable {
                     break;
             }
         }
-        if (game.getMap().hasPower(rowIndex, columnIndex)) {
-            new Thread(() -> {
-                hasPower = true;
-                try {
-                    Thread.sleep(Constants.REMOVE_MUSHROOM_EFFECT_TIME);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                hasPower = false;
-            }).start();
-        } else if (game.getMap().hasHeart(rowIndex, columnIndex)) {
-            this.health++;
-        }
-        for (Dirt dirt : dirts) {
-            if (dirt.getRowIndex() == rowIndex && dirt.getColumnIndex() == columnIndex) {
-                isDirtHere = true;
-                hereDirt = dirt;
-                break;
-            }
-        }
-        setState(dir);
-        address = rootAddress + name + state + ".png";
-        System.out.println(address);
-        node = new ImageView(new Image(address));
     }
 
     public boolean canMove(Direction dir) {
@@ -210,11 +218,13 @@ public class Player implements Serializable {
     }
 
     public void setLists(ArrayList<Dirt> dirts, ArrayList<Stone> stones,
-                         ArrayList<Wall> walls, ArrayList<Mushroom> mushrooms,
-                         ArrayList<Heart> hearts) {
+                         ArrayList<Wall> walls) {
         this.dirts = dirts;
         this.stones = stones;
         this.walls = walls;
+    }
+
+    public void setItems(ArrayList<Mushroom> mushrooms, ArrayList<Heart> hearts) {
         this.mushrooms = mushrooms;
         this.hearts = hearts;
     }
@@ -265,7 +275,32 @@ public class Player implements Serializable {
         }
         pane.add(node, columnIndex, rowIndex);
 
+        Runnable setState = GenerateSetStateRunnable();
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(120);
+                Platform.runLater(setState);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+        new Thread(() -> {
+            try {
+                handleMoveOfStone(columnIndex, rowIndex);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private Runnable GenerateSetStateRunnable() {
         Runnable setState = () -> {
+            try {
+                Thread.sleep(120);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             String dig = "";
             if (isDirtHere) {
                 dig += "_dig";
@@ -281,7 +316,7 @@ public class Player implements Serializable {
 
             if (isDirtHere) {
                 try {
-                    Thread.sleep(200);
+                    Thread.sleep(120);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -296,38 +331,54 @@ public class Player implements Serializable {
             node = new ImageView(new Image(address));
             pane.add(node, columnIndex, rowIndex);
         };
+        return setState;
+    }
 
-        new Thread(() -> {
-            try {
-                Thread.sleep(200);
-                Platform.runLater(setState);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+    public void handleMoveOfStone(int columnIndex, int rowIndex) throws InterruptedException {
+        Thread.sleep(50);
+        for (Stone stone : (ArrayList<Stone>) stones.clone()) {
+            if (stone.getColumnIndex() == columnIndex && stone.getRowIndex() + 1 == rowIndex) {
+                while (true) {
+                    Thread.sleep(50);
+                    if (this.rowIndex != rowIndex || this.columnIndex != columnIndex) {
+                        int fallCount = 0;
+                        int stoneRow = stone.getRowIndex();
+                        while (true) {
+                            fallCount++;
+                            int finalFallCount = fallCount;
+                            Thread.sleep(50);
+                            Platform.runLater(() -> {
+                                pane.getChildren().remove(stone.getNode());
+                                pane.add(stone.getNode(), columnIndex, stone.getRowIndex() + 1);
+                            });
+                            Thread.sleep(50);
+                            if (stone.getRowIndex() >= getMinRowOfDirts(stoneRow, columnIndex) - 2) {
+                                if (finalFallCount >= 2) {
+                                    stones.remove(stone);
+                                    destroy = new Thread(stone::destroy);
+                                    destroy.start();
+                                }
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
             }
-        }).start();
-        handleMoveOfStone(columnIndex, rowIndex);
-
-        try {
-            Thread.sleep(50);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
-    public void handleMoveOfStone(int columnIndex, int rowIndex) {
-        for (Stone stone : stones) {
-            if (stone.getColumnIndex() == columnIndex - 1 && stone.getRowIndex() == rowIndex) {
-                new Thread(() -> {
-//                    while (stone.get) {
-//                        try {
-//                            Thread.sleep(100);
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-                }).start();
+    private int getMinRowOfDirts(int index, int columnIndex) {
+        int min = 100000;
+        for (Dirt dirt : dirts) {
+            if (dirt.getColumnIndex() == columnIndex && index < dirt.getRowIndex() && dirt.getRowIndex() < min) {
+                min = dirt.getRowIndex();
             }
         }
+        if (min == 100000) {
+            return pane.getRowCount();
+        }
+        return min;
     }
 
     public void shoot() {

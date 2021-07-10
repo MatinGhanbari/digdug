@@ -24,17 +24,13 @@ import java.util.ArrayList;
 public class Game extends Application implements Serializable {
     private Player player;
     private ArrayList<Dirt> dirts;
-    private ArrayList<Stone> stones;
-    private ArrayList<Mushroom> mushrooms;
-    private ArrayList<Heart> hearts;
-    private ArrayList<Wall> walls;
     private ArrayList<Balloon> balloons;
-    private GameMap gameMap;
-    private Scene scene;
-    private GridPane pane;
-    private boolean isDone;
+    private final GameMap gameMap;
+    private final Scene scene;
+    private final GridPane pane;
+    private boolean isDone = false;
     private final Timer timer = new Timer(0, 0, 0);
-    private String playerName;
+    private String playerName = "Player";
     private Stage stage;
     private final Label time = new Label();
 
@@ -79,10 +75,6 @@ public class Game extends Application implements Serializable {
         player = gameMap.getPlayer();
         balloons = gameMap.getBalloons();
         dirts = gameMap.getDirts();
-        walls = gameMap.getWalls();
-        mushrooms = gameMap.getMushrooms();
-        hearts = gameMap.getHearts();
-        stones = gameMap.getStones();
     }
 
     public void setPlayerName(String playerName) {
@@ -92,14 +84,14 @@ public class Game extends Application implements Serializable {
     private void startTimer() {
         gameMap.setTimer(time);
         new Thread(() -> {
-            while (timer.getValue() != Constants.GAME_TIME) {
+            while (timer.getValue() * 1000 != Constants.GAME_TIME) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 timer.next();
-                Platform.runLater(()->time.setText(timer.toString()));
+                Platform.runLater(() -> time.setText(timer.toString()));
             }
             handleEndOfGame();
         }).start();

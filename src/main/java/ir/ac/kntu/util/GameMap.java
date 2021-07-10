@@ -134,7 +134,8 @@ public class GameMap {
                 if (items[i][j] == 2) {
                     temp = new ImageView(new Image("assets/player/right/standing.png"));
                     player = new Player(pane, temp);
-                    player.setLists(dirts, stones, walls, mushrooms, hearts);
+                    player.setLists(dirts, stones, walls);
+                    player.setItems(mushrooms, hearts);
                 }
                 if (temp != null) {
                     pane.add(temp, j, i);

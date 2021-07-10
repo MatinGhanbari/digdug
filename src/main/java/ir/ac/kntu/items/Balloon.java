@@ -115,45 +115,21 @@ public class Balloon extends Item {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (node == null) {
+            if (getNode() == null) {
                 address = rootAddress + name + "right_standing" + ".png";
-                node = new ImageView(new Image(address));
+                setNode(new ImageView(new Image(address)));
             }
-            try {
-                rowIndex = GridPane.getRowIndex(node);
-                columnIndex = GridPane.getColumnIndex(node);
-            } catch (NullPointerException ignored) {
-            }
-            Node oldNode = node;
-
-
-            // moveAI();
-            switch ((int) (Math.random() * 4)) {
-                case 0:
-                    change(Direction.UP);
-                    break;
-                case 1:
-                    change(Direction.RIGHT);
-                    break;
-                case 2:
-                    change(Direction.DOWN);
-                    break;
-                case 3:
-                    change(Direction.LEFT);
-                    break;
-                default:
-                    break;
-            }
-            // moveAI();
-
+            rowIndex = GridPane.getRowIndex(getNode());
+            columnIndex = GridPane.getColumnIndex(getNode());
+            Node oldNode = getNode();
+            moveAI();
             Platform.runLater(() -> {
                 try {
-                    pane.getChildren().remove(oldNode);
-                    pane.add(node, columnIndex, rowIndex);
+                    getPane().getChildren().remove(oldNode);
+                    getPane().add(getNode(), columnIndex, rowIndex);
                 } catch (IllegalArgumentException ignore) {
                 }
             });
-
             Runnable setState = () -> {
                 switch (state) {
                     case "up_moving":
@@ -167,11 +143,10 @@ public class Balloon extends Item {
                         break;
                 }
                 address = rootAddress + name + state + ".png";
-                pane.getChildren().remove(node);
-                node = new ImageView(new Image(address));
-                pane.add(node, columnIndex, rowIndex);
+                getPane().getChildren().remove(getNode());
+                setNode(new ImageView(new Image(address)));
+                getPane().add(getNode(), columnIndex, rowIndex);
             };
-
             new Thread(() -> {
                 try {
                     Thread.sleep(200);
@@ -180,6 +155,25 @@ public class Balloon extends Item {
                     e.printStackTrace();
                 }
             }).start();
+        }
+    }
+
+    public void moveAI() {
+        switch ((int) (Math.random() * 4)) {
+            case 0:
+                change(Direction.UP);
+                break;
+            case 1:
+                change(Direction.RIGHT);
+                break;
+            case 2:
+                change(Direction.DOWN);
+                break;
+            case 3:
+                change(Direction.LEFT);
+                break;
+            default:
+                break;
         }
     }
 
@@ -200,7 +194,7 @@ public class Balloon extends Item {
                 }
                 break;
             case DOWN:
-                if (rowIndex == pane.getRowCount() - 1 || thereIsImpassableItem(columnIndex, rowIndex + 1, dir)) {
+                if (rowIndex == getPane().getRowCount() - 1 || thereIsImpassableItem(columnIndex, rowIndex + 1, dir)) {
                     return false;
                 }
                 break;
@@ -210,7 +204,7 @@ public class Balloon extends Item {
                 }
                 break;
             case RIGHT:
-                if (columnIndex == pane.getColumnCount() - 1 ||
+                if (columnIndex == getPane().getColumnCount() - 1 ||
                         thereIsImpassableItem(columnIndex + 1, rowIndex, dir)) {
                     return false;
                 }
@@ -246,7 +240,7 @@ public class Balloon extends Item {
         }
         setState(dir);
         address = rootAddress + name + state + ".png";
-        node = new ImageView(new Image(address));
+        setNode(new ImageView(new Image(address)));
     }
 
     private void setState(Direction dir) {
