@@ -64,7 +64,7 @@ public class Menu extends Application {
         hBox.getChildren().add(textField);
         hBox.getChildren().add(btn);
         hBox.setAlignment(Pos.CENTER);
-        hBox.setSpacing(5);
+        hBox.setSpacing(10);
         Node menuBack = new ImageView(new Image("assets/map/menu_back.png"));
         GridPane gridPane = new GridPane();
         gridPane.add(menuBack, 0, 0);

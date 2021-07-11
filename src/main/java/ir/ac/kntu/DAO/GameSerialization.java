@@ -6,7 +6,7 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class GameSerialization implements Serializable, PlayerDAO {
-    String filename = "src/main/resources/database/GameData.ddd";
+    private String filename = "src/main/resources/database/GameData.ddd";
 
     @Override
     public void savePlayer(Player pl) {

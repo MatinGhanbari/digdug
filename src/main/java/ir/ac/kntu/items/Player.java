@@ -4,7 +4,6 @@ import ir.ac.kntu.constants.Constants;
 import ir.ac.kntu.scene.Game;
 import ir.ac.kntu.util.Direction;
 import ir.ac.kntu.dao.GameSerialization;
-import ir.ac.kntu.util.GameMap;
 import ir.ac.kntu.util.GunType;
 import javafx.application.Platform;
 import javafx.scene.Node;
@@ -79,6 +78,8 @@ public class Player implements Serializable {
     }
 
     private void reload() {
+        rowIndex = 8;
+        columnIndex = 8;
         Platform.runLater(() -> {
             pane.getChildren().remove(this.getNode());
             pane.add(node, 8, 8);
@@ -305,8 +306,10 @@ public class Player implements Serializable {
             for (int i = 1; i <= finalRange; i++) {
                 Balloon enemy = game.hasEnemyInRange(name, i);
                 if (enemy != null) {
+                    enemy.setAlive(false);
                     new Thread(enemy::destroy).start();
-                    game.getMap().getBalloons().remove(enemy);
+                    Platform.runLater(() -> pane.getChildren().remove(enemy.getNode()));
+                    game.getBalloons().remove(enemy);
                     score += (int) ((Math.random() * 500) + 500);
                     break;
                 }
@@ -354,7 +357,7 @@ public class Player implements Serializable {
     }
 
     private void checkDied() {
-        for (Balloon balloon : (ArrayList<Balloon>) game.getMap().getBalloons().clone()) {
+        for (Balloon balloon : game.getBalloons()) {
             if (this.getColumnIndex() == balloon.getColumnIndex()
                     && this.getRowIndex() == balloon.getRowIndex()) {
                 die();

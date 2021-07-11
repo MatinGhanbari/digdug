@@ -92,6 +92,10 @@ public class Game extends Application implements Serializable {
         dirts = gameMap.getDirts();
     }
 
+    public ArrayList<Balloon> getBalloons() {
+        return balloons;
+    }
+
     public void setPlayerName(String playerName) {
         this.playerName = playerName;
         player.setPlayerName(playerName);

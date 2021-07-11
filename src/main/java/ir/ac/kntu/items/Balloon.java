@@ -147,23 +147,7 @@ public class Balloon extends Item {
                 } catch (IllegalArgumentException ignore) {
                 }
             });
-            Runnable setState = () -> {
-                switch (state) {
-                    case "up_moving":
-                    case "right_moving":
-                        state = "right_standing";
-                        break;
-                    case "left_moving":
-                    case "down_moving":
-                        state = "left_standing";
-                    default:
-                        break;
-                }
-                address = rootAddress + name + state + ".png";
-                getPane().getChildren().remove(getNode());
-                setNode(new ImageView(new Image(address)));
-                getPane().add(getNode(), columnIndex, rowIndex);
-            };
+            Runnable setState = generateStatusRunnable();
             new Thread(() -> {
                 try {
                     Thread.sleep(200);
@@ -173,6 +157,27 @@ public class Balloon extends Item {
                 }
             }).start();
         }
+    }
+
+    private Runnable generateStatusRunnable() {
+        Runnable setState = () -> {
+            switch (state) {
+                case "up_moving":
+                case "right_moving":
+                    state = "right_standing";
+                    break;
+                case "left_moving":
+                case "down_moving":
+                    state = "left_standing";
+                default:
+                    break;
+            }
+            address = rootAddress + name + state + ".png";
+            getPane().getChildren().remove(getNode());
+            setNode(new ImageView(new Image(address)));
+            getPane().add(getNode(), columnIndex, rowIndex);
+        };
+        return setState;
     }
 
     public void moveAI() {
@@ -277,7 +282,6 @@ public class Balloon extends Item {
 
     @Override
     public void destroy() {
-        setAlive(false);
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
@@ -286,18 +290,7 @@ public class Balloon extends Item {
         row = this.getRowIndex();
         col = this.getColumnIndex();
         Platform.runLater(() -> getPane().getChildren().remove(getNode()));
-        setNode(new ImageView(new Image("assets/balloon/" + balloonType.toString().toLowerCase() + "/die/die_1.png")));
-        Platform.runLater(() -> getPane().add(getNode(), col, row));
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        row = this.getRowIndex();
-        col = this.getColumnIndex();
-        Platform.runLater(() -> getPane().getChildren().remove(getNode()));
-        setNode(new ImageView(new Image("assets/balloon/" + balloonType.toString().toLowerCase() + "/die/die_2.png")));
+        setNode(new ImageView(new Image("assets/gameObjects/stone_2.png")));
         Platform.runLater(() -> getPane().add(getNode(), col, row));
         try {
             Thread.sleep(100);
@@ -307,17 +300,7 @@ public class Balloon extends Item {
         row = this.getRowIndex();
         col = this.getColumnIndex();
         Platform.runLater(() -> getPane().getChildren().remove(getNode()));
-        setNode(new ImageView(new Image("assets/balloon/" + balloonType.toString().toLowerCase() + "/die/die_3.png")));
-        Platform.runLater(() -> getPane().add(getNode(), col, row));
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        row = this.getRowIndex();
-        col = this.getColumnIndex();
-        Platform.runLater(() -> getPane().getChildren().remove(getNode()));
-        setNode(new ImageView(new Image("assets/balloon/" + balloonType.toString().toLowerCase() + "/die/die_4.png")));
+        setNode(new ImageView(new Image("assets/gameObjects/stone_3.png")));
         Platform.runLater(() -> getPane().add(getNode(), col, row));
         try {
             Thread.sleep(100);
@@ -325,10 +308,6 @@ public class Balloon extends Item {
             e.printStackTrace();
         }
         Platform.runLater(() -> getPane().getChildren().remove(getNode()));
-        game.getMap().getBalloons().remove(this);
-        game.setLists();
-        if (game.getMap().getBalloons().size() <= 0) {
-            player.win();
-        }
+//        setNode(new ImageView(new Image("assets/balloon/" + balloonType.toString().toLowerCase() + "/die/die_4.png")));
     }
 }
