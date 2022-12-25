@@ -28,20 +28,17 @@ it can be found in [/src/main/resources/assets](https://git.ce.kntu.ac.ir/ap/hom
 https://drive.google.com/drive/folders/12WEztpsVj2oXs8ZQyQ92jHcOu4hs0jg_?usp=sharing
 
 # Images
-take screenshots from the outputs of your program and save it as images or gif into the images
+<img src="./images/main_map.png">
+
+### Main Menu
+<img src="./images/Screenshot 2021-07-11 03-47-58.png">
+
+### Game
+<img src="./images/Screenshot 2021-07-11 035146.png">
 
 
 # JavaFx 11
 <ul>
-<li>
-clone in your computer: 
-
-```
-git clone <YOUR_REPO_URL>
-cd YOUR_REPO_URL
-```
-
-</li>
 <li>
     <p>Run Javafx GUI</p>
     
@@ -58,14 +55,3 @@ mvn clean javafx:run
 mvn clean test
 ```
 </li>
-
-<li>
-<p> push your change to the repository: </p>
- 
-```
-git add .
-git commit -m "commit message"
-git push
-```
-</li>
-</ul>
